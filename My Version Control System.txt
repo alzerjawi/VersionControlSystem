@@ -1,0 +1,131 @@
+#!/bin/bash
+##################################################################################################################################################
+##################################################################################################################################################
+#Author: Hassan Al Zerjawi					#Email: w1855254@my.wetsminster.ac.uk						 #
+##################################################################################################################################################
+#Script name: new.sh						#Description: Version Control System					         #
+##################################################################################################################################################
+##################################################################################################################################################
+
+##################################################################################################################################################
+# Appendix [ Help ]                 	                                   									 #
+##################################################################################################################################################
+Help()
+{
+   # Display Help
+	echo "Options:"
+	echo -e "\nAdd files:"
+	echo "add		Loads all files(add) in current directory."
+	echo "add <filename>	Loads single file to staging area."
+	echo -e "\nList files:"
+	echo "list		List files in staging area and repository."
+	echo -e "\nCommit files:"
+	echo "commit		This will add files from staging area to repository."
+	echo -e "\nMegre files:"
+	echo "merge		Merges files."
+	echo -e "\nDisplay file:"
+	echo "display		This will display the content of a file in staging area or repository."
+}
+
+#################################################################################################################################################
+#################################################################################################################################################
+# Main program                                             											#
+#################################################################################################################################################
+#################################################################################################################################################
+
+# Set variables
+> checking/check.txt
+> checking/checker.txt
+ls .stagingArea >> checking/checker.txt
+ls .repository >> checking/check.txt
+i=1
+j=1
+temp1=$(sed -n $i,$i'p' checking/checker.txt)
+temp2=$(sed -n $j,$j'p' checking/check.txt)
+counter1=$(cat checking/checker.txt | wc -l)
+counter2=$(cat checking/check.txt | wc -l)
+status="Y"
+
+# Help function
+if [ $1 == "help" ]
+then
+	Help
+
+# Add function, only adding one file
+elif [ $1 == "add" ] && [[ $2 != "" ]]
+then
+	cp $2 ~/.stagingArea
+
+# Add function, adding all files
+elif [ $1 == "add" ] 
+then
+	cd ~
+#	cp -f /. ~/.stagingArea
+	cp -rf  `ls -A | grep -v ".stagingArea" | grep -v ".repository" | grep -v "checking"` ~/.stagingArea
+#	cp -rf 'ls -A | grep -r "~" |' ~/.stagingArea
+# List function, lists files in stagin and repository areas
+elif [ $1 == "list" ]
+then
+	echo "Files in staging area:"
+	cd .stagingArea
+	ls
+	echo -e "\nFiles in repository:"
+	cd ../.repository
+	ls
+
+# Commit function, adds files and checks existing files to be merged or overwritten
+elif [ $1 == "commit" ] #&& [ $counter >= j ]
+then
+	if [[ $counter2 -gt 0 ]] #
+	then #
+		while [ $i -le $counter1 ]
+		do
+			temp1=$(sed -n $i,$i'p' checking/checker.txt)
+		        while [ $j -le $counter2 ]
+		        do
+				temp2=$(sed -n $j,$j'p' checking/check.txt)
+		                if [[ $temp2 == $temp1 ]]
+				then
+					echo "$temp1 already exists:"
+		                        read -p "Would you like to overwrite or merge(replace lines)? Enter O for overwrite or M for merge: " answer
+					if [ $answer == "O" ]
+					then
+						cp ~/.stagingArea/$temp2 ~/.repository/$temp1
+					elif [ $answer == "M" ]
+					then
+						echo -e "\nThe following lines are different:"
+						diff ~/.stagingArea/$temp2 ~/.repository/$temp1
+						echo ""
+						while [ $status == "Y" ]
+						do
+							read -p "Which line would you like to replace? " line
+							temp3=$(sed -n $line,$line'p' ~/.stagingArea/$temp1)
+							sed  -i $line's'/.*/$temp3/ ~/.repository/$temp1
+							read -p "Would you like to replace another line, enter Y: " status
+						done
+					fi
+				elif [[ $j == $counter2 ]] 
+				then
+					cp ~/.stagingArea/$temp1 ~/.repository/$temp1
+		                fi
+				((j++))
+		        done
+		        ((i++))
+		        j=1
+		done
+	else
+		cp -r ~/.stagingArea/. ~/.repository
+	fi
+	> checking/checker.txt
+	> checking/check.txt 
+elif [ $1 == "display" ] && [[ $2 != "" ]]
+then
+	cat ~/.repository/$2
+else
+	echo "Invalid input, use help function."
+fi
+#################################################################################################################################################
+# End of script					        											#
+#################################################################################################################################################
+
+
